@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="/vendors/styles/core.css">
+    <link rel="stylesheet" type="text/css" href="/vendors/styles/style.css">
+</head>
+<body>
+    <div id="app"></div>
+
+    <script src="/vendors/scripts/template.js"></script>
+    <script>
+        // Definisikan Konten
+        const unitHTML = `
+            <div class="card-box mb-30">
+                <div class="pd-20"><h4 class="text-blue h4">Daftar Unit</h4></div>
+                <div class="pb-20">
+                    <table class="data-table table stripe hover nowrap" id="unitTable">
+                        <thead><tr><th>Tipe</th><th>Warna</th><th>No. Rangka</th></tr></thead>
+                        <tbody id="unitData"></tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        // Panggil Render dengan Plugin yang dibutuhkan saja
+        Layout.render("Data Unit", unitHTML, [
+            "/src/plugins/datatables/js/jquery.dataTables.min.js",
+            "/src/plugins/datatables/js/dataTables.bootstrap4.min.js"
+        ]);
+
+        // Logika Fetch Data
+        window.onload = async () => {
+            const res = await fetch('/api/units');
+            const data = await res.json();
+            const tbody = document.getElementById('unitData');
+            data.forEach(u => {
+                tbody.innerHTML += `<tr><td>${u.tipe}</td><td>${u.warna}</td><td>${u.nomor_rangka}</td></tr>`;
+            });
+        };
+    </script>
+</body>
+</html>

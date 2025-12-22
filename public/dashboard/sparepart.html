@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="/vendors/styles/core.css">
+    <link rel="stylesheet" type="text/css" href="/vendors/styles/style.css">
+</head>
+<body>
+    <div id="app"></div>
+
+    <script src="/vendors/scripts/template.js"></script>
+    <script>
+        const sparepartHTML = `
+            <div class="card-box mb-30">
+                <div class="pd-20">
+                    <h4 class="text-blue h4">Katalog Sparepart</h4>
+                    <button class="btn btn-primary btn-sm">Tambah Part</button>
+                </div>
+                <div class="pb-20">
+                    <table class="table" id="partTable">
+                        <thead><tr><th>Kode Part</th><th>Nama</th><th>Stok</th><th>Harga</th></tr></thead>
+                        <tbody id="partData"></tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        Layout.render("Sparepart", sparepartHTML);
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="/vendors/styles/core.css">
+    <link rel="stylesheet" type="text/css" href="/vendors/styles/style.css">
+</head>
+<body>
+    <div id="app"></div>
+
+    <script src="/vendors/scripts/template.js"></script>
+    <script>
+        const fkbHTML = `
+            <div class="card-box mb-30">
+                <div class="pd-20"><h4 class="text-blue h4">Faktur Kendaraan Bermotor (FKB)</h4></div>
+                <div class="pb-20">
+                    <table class="data-table table stripe hover nowrap" id="fkbTable">
+                        <thead><tr><th>No. FKB</th><th>Mesin</th><th>Rangka</th><th>Tahun</th></tr></thead>
+                        <tbody id="fkbData"></tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        Layout.render("Data FKB", fkbHTML, ["/src/plugins/datatables/js/jquery.dataTables.min.js"]);
+    </script>
+</body>
+</html>

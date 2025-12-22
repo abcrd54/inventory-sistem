@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Inventory System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .sidebar { min-height: 100vh; background: #212529; color: white; padding-top: 20px; }
+        .nav-link { color: #adb5bd; }
+        .nav-link.active { color: white; font-weight: bold; }
+        .card-stat { border-left: 5px solid #0d6efd; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 sidebar d-none d-md-block">
+                <div class="px-3">
+                    <h4>Inventory App</h4>
+                    <p class="small text-muted" id="user-info">Memuat user...</p>
+                </div>
+                <ul class="nav flex-column mt-4">
+                    <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Data Unit</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Sparepart</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Laporan Invoice</a></li>
+                    <li class="nav-item mt-5"><a class="nav-link text-danger" href="#" onclick="logout()">Keluar</a></li>
+                </ul>
+            </nav>
+
+            <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+                <h2 class="mb-4">Dashboard Overview</h2>
+                
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card card-stat shadow-sm p-3">
+                            <h6 class="text-muted">Total Unit</h6>
+                            <h3 id="stat-unit">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-stat shadow-sm p-3 border-success">
+                            <h6 class="text-muted">Invoice Terbit</h6>
+                            <h3 id="stat-invoice">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-stat shadow-sm p-3 border-warning">
+                            <h6 class="text-muted">Stok Sparepart</h6>
+                            <h3 id="stat-sparepart">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="card shadow-sm p-3 mb-4">
+                            <h5>Aktivitas Gudang</h5>
+                            <canvas id="myChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="card shadow-sm p-3 mb-4">
+                            <h5>Invoice Terbaru</h5>
+                            <table class="table table-sm mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-invoice">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Load data saat halaman dibuka
+        async function loadDashboard() {
+            const res = await fetch('/api/dashboard');
+            const data = await res.json();
+            
+            if (res.status === 401) window.location.href = '/';
+
+            // Update Stats
+            document.getElementById('stat-unit').innerText = data.summary.total_unit;
+            document.getElementById('stat-invoice').innerText = data.summary.recent_sales.length;
+            
+            // Render Table
+            const tableBody = document.getElementById('table-invoice');
+            data.summary.recent_sales.forEach(inv => {
+                tableBody.innerHTML += `<tr><td>${inv.nama_customer}</td><td>Rp ${parseInt(inv.harga).toLocaleString()}</td></tr>`;
+            });
+
+            // Render Chart (Dummy data untuk visualisasi)
+            const ctx = document.getElementById('myChart');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei'],
+                    datasets: [{
+                        label: 'Penjualan Unit',
+                        data: [12, 19, 3, 5, 2],
+                        borderColor: '#0d6efd',
+                        tension: 0.1
+                    }]
+                }
+            });
+        }
+
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/';
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
