@@ -2,42 +2,232 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="/vendors/styles/core.css">
-    <link rel="stylesheet" type="text/css" href="/vendors/styles/style.css">
+    <title>Data Unit</title>
+
+    <link rel="stylesheet" href="/vendors/styles/core.css">
+    <link rel="stylesheet" href="/vendors/styles/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div id="app"></div>
 
-    <script src="/vendors/scripts/template.js"></script>
-    <script>
-        // Definisikan Konten
-        const unitHTML = `
-            <div class="card-box mb-30">
-                <div class="pd-20"><h4 class="text-blue h4">Daftar Unit</h4></div>
-                <div class="pb-20">
-                    <table class="data-table table stripe hover nowrap" id="unitTable">
-                        <thead><tr><th>Tipe</th><th>Warna</th><th>No. Rangka</th></tr></thead>
-                        <tbody id="unitData"></tbody>
-                    </table>
+<div id="app"></div>
+
+<script src="/vendors/scripts/template.js"></script>
+
+<script>
+/* ===============================
+   TEMPLATE HTML
+================================ */
+const unitHTML = `
+<div class="card-box mb-30">
+    <div class="pd-20 d-flex justify-content-between align-items-center">
+        <h4 class="text-blue h4">Daftar Unit</h4>
+        <button class="btn btn-primary" data-toggle="modal" data-target="#modalTambahUnit">
+            <i class="bi bi-plus-lg"></i> Tambah Unit
+        </button>
+    </div>
+    
+    <div class="row mb-3">
+    <div class="col-md-3">
+        <input id="filterTipe" class="form-control" placeholder="Filter Tipe">
+    </div>
+    <div class="col-md-3">
+        <input id="filterWarna" class="form-control" placeholder="Filter Warna">
+    </div>
+    <div class="col-md-3">
+        <select id="filterStatus" class="form-control">
+            <option value="">Semua Status</option>
+            <option>Siap Kirim</option>
+            <option>Reject</option>
+            <option>Sudah Kirim</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-primary" onclick="applyFilter()">Filter</button>
+    </div>
+</div>
+
+
+    <div class="pb-20">
+        <table class="table table-striped" id="unitTable">
+            <thead>
+                <tr>
+                    <th>Tipe</th>
+                    <th>Warna</th>
+                    <th>Kategori</th>
+                    <th>No Rangka</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="unitData">
+                <tr>
+                    <td colspan="5" class="text-center">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODAL TAMBAH UNIT -->
+<div class="modal fade" id="modalTambahUnit" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="formTambahUnit">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Unit Baru</h5>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
                 </div>
-            </div>
-        `;
 
-        // Panggil Render dengan Plugin yang dibutuhkan saja
-        Layout.render("Data Unit", unitHTML, [
-            "/src/plugins/datatables/js/jquery.dataTables.min.js",
-            "/src/plugins/datatables/js/dataTables.bootstrap4.min.js"
-        ]);
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Tipe</label>
+                        <input type="text" id="tipe" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Warna</label>
+                        <input type="text" id="warna" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="kategori" class="form-control" required>
+                            <option value="">Pilih</option>
+                            <option>Sepeda Listrik</option>
+                            <option>Motor Listrik</option>
+                            <option>Roda 3</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nomor Rangka</label>
+                        <input type="text" id="noRangka" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nomor Dinamo</label>
+                        <input type="text" id="noDinamo" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="status" class="form-control">
+                            <option>Siap Kirim</option>
+                            <option>Reject</option>
+                            <option>Sudah Kirim</option>
+                        </select>
+                    </div>
+                </div>
 
-        // Logika Fetch Data
-        window.onload = async () => {
-            const res = await fetch('/api/units');
-            const data = await res.json();
-            const tbody = document.getElementById('unitData');
-            data.forEach(u => {
-                tbody.innerHTML += `<tr><td>${u.tipe}</td><td>${u.warna}</td><td>${u.nomor_rangka}</td></tr>`;
-            });
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button class="btn btn-primary" type="submit">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+`;
+
+/* ===============================
+   RENDER HALAMAN
+================================ */
+Layout.render("Data Unit", unitHTML, [
+    "/src/plugins/datatables/js/jquery.dataTables.min.js",
+    "/src/plugins/datatables/js/dataTables.bootstrap4.min.js",
+]);
+
+/* ===============================
+   LOAD DATA UNIT
+================================ */
+async function loadUnits() {
+    try {
+        const res = await fetch('/api/units', {
+            credentials: 'include' // 🔥 WAJIB UNTUK EXPRESS SESSION
+        });
+
+        console.log('API STATUS:', res.status);
+
+        if (res.status === 401) {
+            location.href = '/';
+            return;
+        }
+
+        const data = await res.json();
+        console.log('DATA UNIT:', data);
+
+        const tbody = document.getElementById('unitData');
+        tbody.innerHTML = '';
+
+        if (!data.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center">Data kosong</td>
+                </tr>`;
+            return;
+        }
+
+        data.forEach(u => {
+            let badge = 'badge-primary';
+            if (u.status === 'Reject') badge = 'badge-danger';
+            if (u.status === 'Sudah Kirim') badge = 'badge-success';
+
+            tbody.innerHTML += `
+            <tr>
+                <td>${u.tipe}</td>
+                <td>${u.warna}</td>
+                <td>${u.kategori}</td>
+                <td>${u.nomor_rangka}</td>
+                <td><span class="badge ${badge}">${u.status}</span></td>
+            </tr>`;
+        });
+
+    } catch (err) {
+        console.error('LOAD ERROR:', err);
+    }
+}
+
+/* ===============================
+   SUBMIT TAMBAH UNIT
+================================ */
+document.addEventListener('submit', async (e) => {
+    if (e.target.id === 'formTambahUnit') {
+        e.preventDefault();
+
+        const payload = {
+            tipe: tipe.value,
+            warna: warna.value,
+            kategori: kategori.value,
+            nomor_rangka: noRangka.value,
+            nomor_dinamo: noDinamo.value,
+            status: status.value
         };
-    </script>
+
+        Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+
+        const res = await fetch('/api/units', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+
+        Swal.close();
+
+        if (res.ok) {
+            Swal.fire('Berhasil', 'Unit ditambahkan', 'success');
+            $('#modalTambahUnit').modal('hide');
+            e.target.reset();
+            loadUnits();
+        } else {
+            const err = await res.json();
+            Swal.fire('Gagal', err.message || 'Error', 'error');
+        }
+    }
+});
+
+/* ===============================
+   LOAD SETELAH RENDER DOM
+================================ */
+setTimeout(loadUnits, 300);
+</script>
+
 </body>
 </html>

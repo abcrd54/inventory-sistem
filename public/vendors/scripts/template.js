@@ -43,6 +43,11 @@ const Layout = {
                         rel="stylesheet"
                     />
                     <!-- CSS -->
+                    <link
+                        rel="stylesheet"
+                        type="text/css"
+                        href="/src/plugins/sweetalert2/sweetalert2.css"
+                    />
                     <link rel="stylesheet" type="text/css" href="/vendors/styles/core.css" />
                     <link
                         rel="stylesheet"
@@ -59,12 +64,7 @@ const Layout = {
                         type="text/css"
                         href="/src/plugins/datatables/css/responsive.bootstrap4.min.css"
                     />
-                    <link rel="stylesheet" type="text/css" href="/vendors/styles/style.css" />
-                    <script
-                        async
-                        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2973766580778258"
-                        crossorigin="anonymous"
-                    ></script>
+                    <link rel="stylesheet" type="text/css" href="/vendors/styles/style.css" />                  
                 </head>
                 <body>
                     
@@ -377,45 +377,59 @@ const Layout = {
     initLogout: () => {
         const btnLogout = document.getElementById('btn-logout');
         if (btnLogout) {
-            btnLogout.addEventListener('click', async (e) => {
+            btnLogout.addEventListener('click', (e) => {
                 e.preventDefault();
                 
-                // Konfirmasi sederhana
-                if (!confirm("Apakah Anda yakin ingin keluar?")) return;
-
-                try {
-                    const res = await fetch('/api/logout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-
-                    if (res.ok) {
-                        // Jika logout sukses di backend, lempar ke halaman login
-                        window.location.href = '/';
-                    } else {
-                        alert("Gagal logout dari server.");
+                Swal.fire({
+                    title: 'Keluar?',
+                    text: "Anda akan mengakhiri sesi ini.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, Logout',
+                    cancelButtonText: 'Batal'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        const res = await fetch('/api/logout', { method: 'POST' });
+                        if (res.ok) window.location.href = '/';
                     }
-                } catch (error) {
-                    console.error("Logout Error:", error);
-                }
+                });
             });
         }
     },
     
     loadUserInfo: async () => {
-       try {
+        try {
             const response = await fetch('/api/user-info');
-            if (response.status === 401) return;
+            
+            // JIKA STATUS 401 (Unauthorized)
+            if (response.status === 401) {
+                // Hapus jika ada sisa data di localStorage (opsional)
+                localStorage.clear(); 
+                // Arahkan paksa ke halaman login utama
+                window.location.href = '/'; 
+                return;
+            }
 
             const user = await response.json();
             
-            // PERBAIKAN: Cek apakah elemennya ada sebelum diisi
+            // Update UI Username
             const nameElement = document.getElementById('display-username');
             if (nameElement && user.username) {
                 nameElement.innerText = user.username;
             }
+
+            // Update UI Role (Opsional, jika ada elemen display-role)
+            const roleElement = document.getElementById('display-role');
+            if (roleElement && user.role) {
+                roleElement.innerText = user.role;
+            }
+
         } catch (error) {
             console.error("Gagal mengambil data user:", error);
+            // Jika terjadi error koneksi yang parah, arahkan ke login untuk keamanan
+            // window.location.href = '/'; 
         }
     },
 
@@ -433,13 +447,10 @@ const Layout = {
             "/src/plugins/datatables/js/responsive.bootstrap4.min.js"
         ];
 
-        // Gabungkan dengan plugin tambahan (misal Datatables)
-        const allScripts = [...baseScripts, ...plugins];
-
-        allScripts.forEach(src => {
+        baseScripts.forEach(src => {
             const script = document.createElement('script');
             script.src = src;
-            script.async = false; // Menjaga urutan agar tidak error
+            script.async = false; // PENTING: Agar dimuat berurutan dan tidak balapan
             document.body.appendChild(script);
         });
     },

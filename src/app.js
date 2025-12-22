@@ -8,46 +8,51 @@ const apiRoutes = require('./routes/api');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 2. Konfigurasi Session (PENTING: Harus sebelum routing)
+// 2. Konfigurasi Session
 app.use(session({
-    name: 'inventory_sid', // Memberi nama cookie agar lebih aman
+    name: 'inventory_sid',
     secret: 'kunci-rahasia-inventory', 
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: false, // Set false karena masih menggunakan HTTP (localhost)
-        httpOnly: true, // Mencegah akses cookie dari JavaScript luar
-        maxAge: 3600000 
+        secure: false, 
+        httpOnly: true, 
+        maxAge: 3600000 // 1 Jam
     }
 }));
 
-// 3. Folder Statis
-// Pastikan path ke folder 'public' tepat. Jika app.js ada di folder 'src', gunakan '../public'
-app.use(express.static(path.join(__dirname, '../public')));
-
-// 4. Middleware Cek Login (Reusable)
+// 3. Middleware Cek Login (Reusable)
 const isAuthenticated = (req, res, next) => {
     if (req.session.userId) {
         return next();
     }
+    // Jika request via AJAX (fetch), kirim status 401
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    // Jika akses URL biasa, redirect ke login
     res.redirect('/');
 };
 
-// 5. Routing API
+// 4. Routing API (Tanpa proteksi login untuk Login/Signup)
+app.use('/api', apiRoutes);
+
+// Endpoint info user tetap di sini atau pindahkan ke apiRoutes
 app.get('/api/user-info', (req, res) => {
     if (req.session.userId) {
         res.json({
-            username: req.session.username || "Guest", 
-            role: req.session.role || "User",
+            username: req.session.username, 
+            role: req.session.role,
         });
     } else {
         res.status(401).json({ error: "Unauthorized" });
     }
 });
 
-app.use('/api', apiRoutes);
+// 5. Folder Statis
+app.use(express.static(path.join(__dirname, '../public')));
 
-// 6. Routing Halaman
+// 6. Routing Halaman Utama
 app.get('/', (req, res) => {
     if (req.session.userId) {
         return res.redirect('/dashboard/index.html');
@@ -55,7 +60,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Gunakan Middleware isAuthenticated agar kode lebih rapi
+// 7. Routing Halaman Dashboard (Terproteksi)
 app.get('/dashboard', isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, '../public/dashboard/index.html'));
 });
@@ -71,10 +76,9 @@ app.get('/dashboard/:page', isAuthenticated, (req, res) => {
     });
 });
 
-// 7. Route Logout
+// 8. Route Logout
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
-        if (err) return res.send('Gagal logout');
         res.clearCookie('inventory_sid');
         res.redirect('/');
     });
