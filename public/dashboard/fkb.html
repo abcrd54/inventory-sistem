@@ -2,26 +2,580 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="/vendors/styles/core.css">
-    <link rel="stylesheet" type="text/css" href="/vendors/styles/style.css">
+
+    <!-- CORE -->
+    <link rel="stylesheet" href="/vendors/styles/core.css">
+    <link rel="stylesheet" href="/vendors/styles/style.css">
+
+    <!-- DATATABLES -->
+    <link rel="stylesheet" href="/src/plugins/datatables/css/dataTables.bootstrap4.min.css">
+
+    <!-- ICON -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- SWEETALERT -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+    .modal-scroll-content {
+        max-height: 65vh; /* tinggi modal */
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    </style>
+
 </head>
 <body>
-    <div id="app"></div>
 
-    <script src="/vendors/scripts/template.js"></script>
-    <script>
-        const fkbHTML = `
-            <div class="card-box mb-30">
-                <div class="pd-20"><h4 class="text-blue h4">Faktur Kendaraan Bermotor (FKB)</h4></div>
-                <div class="pb-20">
-                    <table class="data-table table stripe hover nowrap" id="fkbTable">
-                        <thead><tr><th>No. FKB</th><th>Mesin</th><th>Rangka</th><th>Tahun</th></tr></thead>
-                        <tbody id="fkbData"></tbody>
-                    </table>
+<div id="app"></div>
+
+<!-- TEMPLATE -->
+<script src="/vendors/scripts/template.js"></script>
+
+<!-- JQUERY -->
+<script src="/src/scripts/jquery.min.js"></script>
+
+<!-- DATATABLES -->
+<script src="/src/plugins/datatables/js/jquery.dataTables.min.js"></script>
+<script src="/src/plugins/datatables/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script>
+/* ===============================
+   TEMPLATE HTML
+================================ */
+const fkbHTML = `
+<div class="card-box mb-30">
+    <div class="pd-20 d-flex justify-content-between align-items-center">
+        <h4 class="text-blue h4">Faktur Kendaraan Bermotor (FKB)</h4>
+        <button class="btn btn-primary" data-toggle="modal" data-target="#modalTambahFKB">
+            <i class="bi bi-plus-lg"></i> Tambah Faktur
+        </button>
+    </div>
+
+    <div class="pb-20">
+        <table class="table table-striped" id="fkbTable" width="100%">
+            <thead>
+                <tr>
+                    <th>No Faktur</th>
+                    <th>Nama</th>
+                    <th>Alamat</th>
+                    <th>Tipe</th>
+                    <th>Tahun</th>
+                    <th>No Mesin</th>
+                    <th>No Rangka</th>
+                    <th width="120">Action</th>
+                </tr>
+            </thead>
+            <tbody id="fkbData"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetailFKB">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Faktur Kendaraan</h5>
+                <button class="close" data-dismiss="modal">×</button>
+            </div>
+
+            <div class="modal-body p-0">
+                <div class="modal-scroll-content p-4">
+                    <div class="row" id="detailFKBContent"></div>
                 </div>
             </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- MODAL TAMBAH FKB -->
+<div class="modal fade" id="modalTambahFKB" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <form id="formTambahFKB">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah Faktur Kendaraan Bermotor</h5>
+                <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+
+            <div class="modal-body p-0">
+                <!-- SCROLL WRAPPER (KUNCI) -->
+                <div class="modal-scroll-content p-4">
+                    
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label>No Faktur</label>
+                            <input id="no_faktur" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Nama</label>
+                            <input id="nama" class="form-control">
+                        </div>
+
+                        <div class="col-md-12 form-group">
+                            <label>Alamat</label>
+                            <textarea id="alamat" class="form-control" required></textarea>
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label>No KTP</label>
+                            <input id="no_ktp" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Merk</label>
+                            <input id="merk" class="form-control">
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label>Tipe</label>
+                            <input id="tipe" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Jenis</label>
+                            <input id="jenis" class="form-control">
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label>Model</label>
+                            <input id="model" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Tahun Pembuatan</label>
+                            <input id="tahun_pembuatan" class="form-control">
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label>Isi Silinder</label>
+                            <input id="isi_silinder" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Warna</label>
+                            <input id="warna" class="form-control">
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label>No Rangka</label>
+                            <input id="no_rangka" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>No Mesin</label>
+                            <input id="no_mesin" class="form-control">
+                        </div>
+
+                        <div class="col-md-6 form-group">
+                            <label>Bahan Bakar</label>
+                            <input id="bahan_bakar" class="form-control">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Harga</label>
+                            <input id="harga" class="form-control">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" onclick="generateRandomFKB()">
+                    🎲 Acak Data
+                </button>
+                <button class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                <button class="btn btn-primary">Simpan</button>
+            </div>
+
+        </div>
+        </form>
+    </div>
+</div>
+
+`;
+
+/* ===============================
+   RENDER
+================================ */
+Layout.render("Data FKB", fkbHTML);
+
+/* ===============================
+   DATATABLE INIT
+================================ */
+let fkbTable;
+const { PDFDocument, StandardFonts } = PDFLib;
+const draw = (page, text, x, y, size = 10) => {
+    if (!text) return;
+    page.drawText(String(text), {
+        x,
+        y,
+        size
+    });
+};
+
+function initFKBTable() {
+    fkbTable = $('#fkbTable').DataTable({
+        paging: true,
+        ordering: true,
+        searching: false,
+        responsive: true,
+        language: {
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data",
+            zeroRecords: "Data tidak ditemukan",
+            info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+            infoEmpty: "Data kosong"
+        }
+    });
+}
+
+/* ===============================
+   LOAD DATA
+================================ */
+async function loadFKB() {
+    const res = await fetch('/api/fkb', { credentials: 'include' });
+
+    if (res.status === 401) {
+        location.href = '/';
+        return;
+    }
+
+    const data = await res.json();
+
+    // simpan cache untuk detail
+    fkbCache = data;
+
+    fkbTable.clear();
+
+    data.forEach(f => {
+        fkbTable.row.add([
+            f.no_faktur || '-',
+            f.nama || '-',
+            f.alamat || '-',
+            f.tipe || '-',
+            f.tahun_pembuatan || '-',
+            f.no_mesin || '-',
+            f.no_rangka || '-',
+            `
+            <button class="btn btn-sm btn-info mr-1"
+                title="Detail"
+                onclick="openDetail(${f.id})">
+                <i class="bi bi-eye"></i>
+            </button>
+            
+            <button class="btn btn-sm btn-success"
+                onclick="printFKB(${f.id})">
+                <i class="fa fa-print"></i>
+            </button>
+
+
+            `
+        ]);
+    });
+
+    fkbTable.draw();
+}
+
+
+/* ===============================
+   SUBMIT FORM
+================================ */
+document.addEventListener('submit', async (e) => {
+    if (e.target.id !== 'formTambahFKB') return;
+
+    e.preventDefault();
+
+    const payload = {
+        no_faktur: no_faktur.value,
+        nama: nama.value,
+        alamat: alamat.value,
+        no_ktp: no_ktp.value,
+        merk: merk.value,
+        tipe: tipe.value,
+        jenis: jenis.value,
+        model: model.value,
+        tahun_pembuatan: tahun_pembuatan.value,
+        isi_silinder: isi_silinder.value,
+        warna: warna.value,
+        no_rangka: no_rangka.value,
+        no_mesin: no_mesin.value,
+        bahan_bakar: bahan_bakar.value,
+        harga: harga.value
+    };
+
+    Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+
+    const res = await fetch('/api/fkb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+    });
+
+    Swal.close();
+
+    if (res.ok) {
+        Swal.fire('Berhasil', 'Faktur ditambahkan', 'success');
+        $('#modalTambahFKB').modal('hide');
+        e.target.reset();
+        loadFKB();
+    } else {
+        Swal.fire('Gagal', 'Terjadi kesalahan', 'error');
+    }
+});
+
+/* ===============================
+   START
+================================ */
+setTimeout(() => {
+    initFKBTable();
+    loadFKB();
+}, 300);
+
+
+function randomFrom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function randomNumber(len) {
+    return Math.floor(Math.random() * Math.pow(10, len))
+        .toString()
+        .padStart(len, '0');
+}
+
+function generateRandomFKB() {
+    document.getElementById('no_faktur').value = 'FKB-' + randomNumber(6);
+    document.getElementById('nama').value = randomFrom([
+        'Budi Santoso', 'Ahmad Fauzi', 'Siti Aminah', 'Rudi Hartono'
+    ]);
+    document.getElementById('alamat').value = randomFrom([
+        'Jakarta', 'Bandung', 'Surabaya', 'Medan'
+    ]);
+    document.getElementById('no_ktp').value = '32' + randomNumber(14);
+
+    document.getElementById('merk').value = randomFrom([
+        'United', 'Selis', 'Gesits', 'Viar'
+    ]);
+    document.getElementById('tipe').value = randomFrom([
+        'T1800', 'E-Max', 'Q1', 'G1'
+    ]);
+    document.getElementById('jenis').value = randomFrom([
+        'Sepeda Listrik', 'Motor Listrik'
+    ]);
+    document.getElementById('model').value = randomFrom([
+        'Solo', 'Duo', 'Cargo'
+    ]);
+
+    document.getElementById('tahun_pembuatan').value =
+        2020 + Math.floor(Math.random() * 5);
+
+    document.getElementById('isi_silinder').value =
+        randomFrom(['-', '2000W', '1500W']);
+
+    document.getElementById('warna').value = randomFrom([
+        'Hitam', 'Putih', 'Merah', 'Biru'
+    ]);
+
+    document.getElementById('no_rangka').value =
+        'RNG' + randomNumber(10);
+
+    document.getElementById('no_mesin').value =
+        'MSN' + randomNumber(10);
+
+    document.getElementById('bahan_bakar').value =
+        randomFrom(['Listrik']);
+
+    document.getElementById('harga').value =
+        (10000000 + Math.floor(Math.random() * 10000000)).toString();
+
+    console.log('FKB random generated');
+}
+
+
+
+function openDetail(id) {
+    const data = fkbCache.find(x => x.id === id);
+    if (!data) return;
+
+    const container = document.getElementById('detailFKBContent');
+    container.innerHTML = '';
+
+    Object.entries(data).forEach(([key, val]) => {
+        container.innerHTML += `
+        <div class="col-md-6 mb-2">
+            <label class="font-weight-bold">${key}</label>
+            <input class="form-control" value="${val ?? ''}" readonly>
+        </div>
         `;
-        Layout.render("Data FKB", fkbHTML, ["/src/plugins/datatables/js/jquery.dataTables.min.js"]);
-    </script>
+    });
+
+    $('#modalDetailFKB').modal('show');
+}
+
+async function printFKB(id) {
+
+  const res = await fetch(`/api/fkb/${id}`, {
+    credentials: 'include'
+  });
+
+  if (!res.ok) {
+    alert('Gagal ambil data FKB');
+    return;
+  }
+
+  const row = await res.json();
+    const pdfData = {
+    atas_nama: row.nama,
+    alamat: row.alamat,
+    no_ktp: row.no_ktp,
+
+    nomor_faktur: row.no_faktur,
+    tanggal: new Date(row.created_at).toLocaleDateString(),
+
+    merk: row.merk,
+    type: row.tipe,
+    jenis: row.jenis,
+    model: row.model,
+    tahun: row.tahun_pembuatan,
+    isi_silinder: row.isi_silinder,
+    warna: row.warna,
+    no_rangka: row.no_rangka,
+    no_mesin: row.no_mesin,
+    bahan_bakar: row.bahan_bakar,
+    harga: row.harga
+  };
+
+  await generatePDF(pdfData);
+}
+
+async function generatePDF(data) {
+
+  const pdfBytes = await fetch('/src/template.pdf').then(r => r.arrayBuffer());
+  const pdfDoc = await PDFDocument.load(pdfBytes);
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const Y_OFFSET = 190; 
+  const pages = pdfDoc.getPages();
+
+  const draw = (page, text, x, y, size = 10) => {
+    if (!text) return;
+    page.drawText(String(text), {
+        x,
+        y: y + Y_OFFSET,
+        size,
+        font
+    });
+    };
+
+   const wrap = (
+  page,
+  text,
+  x,
+  y,
+  maxWidth = 370,
+  lineHeight = 13,
+  indent = 0,
+  maxLines = 3
+) => {
+  if (!text) return 0;
+
+  const words = String(text).split(' ');
+  let line = '';
+  let offset = 0;
+  let firstLine = true;
+  let lines = 0;
+
+  for (let word of words) {
+    const test = line + word + ' ';
+    if (test.length * 5 > maxWidth) {
+      if (lines >= maxLines) break;
+
+      page.drawText(line, {
+        x: firstLine ? x : x + indent,
+        y: y + Y_OFFSET - offset,
+        size: 10,
+        font
+      });
+
+      line = word + ' ';
+      offset += lineHeight;
+      firstLine = false;
+      lines++;
+    } else {
+      line = test;
+    }
+  }
+
+  if (lines < maxLines) {
+    page.drawText(line, {
+      x: firstLine ? x : x + indent,
+      y: y + Y_OFFSET - offset,
+      size: 10,
+      font
+    });
+    lines++;
+  }
+
+  return lines * lineHeight;
+};
+
+pages.forEach(page => {
+
+  const COL = 192;
+  let cursorY = 449;
+
+  draw(page, data.atas_nama, COL, cursorY);
+  cursorY -= 17;
+
+  const alamatHeight = wrap(page, data.alamat, COL, cursorY);
+  cursorY -= alamatHeight + 6;
+
+  draw(page, data.no_ktp, COL, cursorY);
+
+  draw(page, data.nomor_faktur, 120, 504);
+  draw(page, data.tanggal, 480, 504);
+
+  draw(page, data.merk, COL, 350);
+  draw(page, data.type, COL, 332);
+  draw(page, data.jenis, COL, 315);
+  draw(page, data.model, COL, 297);
+  draw(page, data.tahun, COL, 280);
+  draw(page, data.isi_silinder, COL, 262);
+  draw(page, data.warna, COL, 244);
+  draw(page, data.no_rangka, COL, 227);
+  draw(page, data.no_mesin, COL, 209);
+  draw(page, data.bahan_bakar, COL, 191);
+  draw(page, data.harga, COL, 174);
+});
+
+
+
+  const out = await pdfDoc.save();
+  const blob = new Blob([out], { type: 'application/pdf' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'DEBUG_faktur_kendaraan.pdf';
+  a.click();
+}
+
+/* =========================
+   EVENTS
+========================= */
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(form).entries());
+  await generatePDF(data);
+});
+
+debugBtn.addEventListener('click', async () => {
+  const data = generateRandomData();
+
+  // isi form juga (biar kelihatan)
+  Object.keys(data).forEach(k => {
+    if (form[k]) form[k].value = data[k];
+  });
+
+  await generatePDF(data);
+});
+
+</script>
+
 </body>
 </html>
