@@ -15,9 +15,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: false, 
-        httpOnly: true, 
-        maxAge: 3600000 // 1 Jam
+        secure: true,        // 🔥 HARUS TRUE
+        httpOnly: true,
+        sameSite: 'none',    // 🔥 WAJIB UNTUK HTTPS
+        maxAge: 3600000
     }
 }));
 
