@@ -9,16 +9,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 2. Konfigurasi Session
+app.set('trust proxy', 1); // 🔥 WAJIB DI VERCEL
+
 app.use(session({
     name: 'inventory_sid',
-    secret: 'kunci-rahasia-inventory', 
+    secret: 'kunci-rahasia-inventory',
     resave: false,
     saveUninitialized: false,
-    cookie: { 
-        secure: true,        // 🔥 HARUS TRUE
+    cookie: {
+        secure: true,        // 🔥 HTTPS ONLY
         httpOnly: true,
-        sameSite: 'none',    // 🔥 WAJIB UNTUK HTTPS
-        maxAge: 3600000
+        sameSite: 'none',    // 🔥 WAJIB
+        maxAge: 1000 * 60 * 60
     }
 }));
 
