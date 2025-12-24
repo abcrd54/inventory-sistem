@@ -31,7 +31,7 @@ const isAuthenticated = (req, res, next) => {
         return res.status(401).json({ message: "Unauthorized" });
     }
     // Jika akses URL biasa, redirect ke login
-    res.redirect('/');
+    res.redirect('/login');
 };
 
 // 4. Routing API (Tanpa proteksi login untuk Login/Signup)
@@ -53,10 +53,14 @@ app.get('/api/user-info', (req, res) => {
 app.use(express.static(path.join(__dirname, '../public')));
 
 // 6. Routing Halaman Utama
-app.get('/', (req, res) => {
+app.get('/login', (req, res) => {
     if (req.session.userId) {
         return res.redirect('/dashboard/index.html');
     }
+    res.sendFile(path.join(__dirname, '../public/login.html'));
+});
+
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
@@ -80,7 +84,7 @@ app.get('/dashboard/:page', isAuthenticated, (req, res) => {
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         res.clearCookie('inventory_sid');
-        res.redirect('/');
+        res.redirect('/login');
     });
 });
 

@@ -16,7 +16,7 @@ const Layout = {
                     <link
                         rel="apple-touch-icon"
                         sizes="180x180"
-                        href="/vendors/images/apple-touch-icon.png"
+                        href="/vendors/images/180x180.png"
                     />
                     <link
                         rel="icon"
@@ -28,7 +28,7 @@ const Layout = {
                         rel="icon"
                         type="image/png"
                         sizes="16x16"
-                        href="/vendors/images/favicon-16x16.png"
+                        href="/vendors/images/favicon-32x32.png"
                     />
 
                     <!-- Mobile Specific Metas -->
@@ -408,7 +408,7 @@ const Layout = {
                 // Hapus jika ada sisa data di localStorage (opsional)
                 localStorage.clear(); 
                 // Arahkan paksa ke halaman login utama
-                window.location.href = '/'; 
+                window.location.href = '/login'; 
                 return;
             }
 
@@ -440,6 +440,7 @@ const Layout = {
             "/vendors/scripts/script.min.js",
             "/vendors/scripts/process.js",
             "/vendors/scripts/layout-settings.js",
+            "/src/plugins/sweetalert2/sweetalert2.all.min.js",
             "/src/plugins/apexcharts/apexcharts.min.js",
             "/src/plugins/datatables/js/jquery.dataTables.min.js",
             "/src/plugins/datatables/js/dataTables.bootstrap4.min.js",
